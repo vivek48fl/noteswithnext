@@ -1,41 +1,34 @@
 import Link from "next/link";
 import fetch from "isomorphic-unfetch";
-import 'semantic-ui-css/semantic.min.css';
+import "semantic-ui-css/semantic.min.css";
 import { Button, Card } from "semantic-ui-react";
+import { useSession, signOut, signIn } from "next-auth/react";
+import { useRouter } from "next/router";
+import Note from "../components/Note";
 
-const Index = ({ notes }) => {
+const Index = ({notes}) => {
+  const { data: session } = useSession();
+  const router = useRouter();
   return (
-    <div>
-      <h1>Notes</h1>
-      <div className="grid wrapper">
-        {notes.map((note) => {
-          return (
-            <div key={note._id} className="note-container">
-              <Card>
-                <Card.Content>
-                  <Card.Header>
-                    <Link href={`/${note._id}`}>
-                      <a>{note.title}</a>
-                    </Link>
-                  </Card.Header>
-                </Card.Content>
-                <Card.Content extra>
-                  <Link href={`/${note._id}`}>
-                    <Button primary>View</Button>
-                  </Link>
-
-                  <Link href={`/${note._id}/edit`}>
-                    <Button primary>Edit</Button>
-                  </Link>
-                </Card.Content>
-              </Card>
+    <div className="center">
+      <div >
+      <h2 className="h1">Notes app</h2>
+      {session ? 
+      <>
+        <Button onClick={() => {
+          signOut();
+    
+          }}>LogOut</Button>
+          <Note notes={notes}/>
+          </>
+       : 
+          <Button onClick={() => {
+            signIn();
+      
+            }}>Login</Button>}
             </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
+              </div>)}
+      
 Index.getInitialProps = async () => {
   const res = await fetch("http://localhost:3000/api/notes/");
   const { data } = await res.json();

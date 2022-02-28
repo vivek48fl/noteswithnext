@@ -1,13 +1,13 @@
+
+import { SessionProvider } from "next-auth/react";
 import "../css/styles.css";
-import 'semantic-ui-css/semantic.min.css';
-import Layout from "../components/Layout";
 
 function MyApp({ Component, pageProps }) {
-  return( 
-  <Layout>
-  <Component {...pageProps} />
-  </Layout>);
-  
+  return (
+    <SessionProvider>
+      <Component {...pageProps} />
+    </SessionProvider>
+  );
 }
 
-export default MyApp
+export default MyApp;

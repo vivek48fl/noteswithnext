@@ -1,6 +1,9 @@
 h1{
     text-align: center;
 }
+.center{
+    margin:"50px auto";
+}
 .wrapper{
     max-width: 1200px;
     padding:0 16px;
