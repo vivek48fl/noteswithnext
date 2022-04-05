@@ -1,54 +1,66 @@
-import NextAuth from "next-auth";
-import CredentialProvider from "next-auth/providers/credentials";
+import NextAuth from "next-auth/next";
+import Credentials from 'next-auth/providers/credentials';
+
+import clientPromise from "./../../../lib/mongodb";
 
 export default NextAuth({
-  providers: [
-    CredentialProvider({
-      name: "credentials",
-      credentials: {
-        email: {
-          label: "Email",
-          type: "text",        },
-        password: { label: "Password", type: "password" },
-      },
-      authorize: (credentials) => {
-        // database look up
-        if (
-          credentials.email === "johndoe@test.com" &&
-          credentials.password === "test"
-        ) {
-          return {
-            id: 2,
-            name: "John",
-            email: "johndoe@test.com",
-          };
-        }
-
-        // login failed
-        return null;
-      },
-    }),
-  ],
-  callbacks: {
-    jwt: ({ token, user }) => {
-      // first time jwt callback is run, user object is available
-      if (user) {
-        token.id = user.id;
-      }
-
-      return token;
+    session: {
+        jwt: true,
     },
-    session: ({ session, token }) => {
-      if (token) {
-        session.id = token.id;
-      }
+    secret: process.env.SECRET,
+    providers: [
+        Credentials({
+            // credentials: {
+                // use if you want to use NextAuth Login Page
+            // },
+            async authorize(credentials){
 
-      return session;
+                // NOTE: ensure client is connected
+                const client = await clientPromise;
+
+                // connect to database
+                const db = await client.db('test');
+
+                // check for existing user
+                const user = await db.collection('users').findOne({
+                    email: credentials.email,
+                });
+
+                if(!user){
+                    // client.close();
+                    throw new Error("No user found!");
+                }
+
+                // check for correct password
+                const validPassword = await verifyPassword(credentials.password, user.password);
+
+                if(!validPassword){
+                    // client.close();
+                    throw new Error('Incorrect Password!');
+                }
+
+                let response = {
+                    email : user.email,
+                    // return other things here
+                    queryDb: user.queryDb,
+                    instituteId: user.instituteId.toString(),
+                    role: user.role,
+                }
+
+                return response;
+
+            }
+        })
+    ],
+    callbacks: {
+        jwt: async ({ token, user }) => {
+            user && (token.user = user)
+            return token
+        },
+        session: async ({ session, token }) => {
+            session.user = token.user
+            return session
+        }
     }
-  },
-  secret: "test",
-  jwt: {
-    secret: "test",
-    encryption: true,
-  },
+
 });

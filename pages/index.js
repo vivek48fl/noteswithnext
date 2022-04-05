@@ -6,7 +6,7 @@ import { useSession, signOut, signIn } from "next-auth/react";
 import { useRouter } from "next/router";
 import Note from "../components/Note";
 
-const Index = ({notes}) => {
+export default function Index ({notes})  {
   const { data: session } = useSession();
   const router = useRouter();
   return (
@@ -34,4 +34,4 @@ Index.getInitialProps = async () => {
   const { data } = await res.json();
   return { notes: data };
 };
-export default Index;
+
